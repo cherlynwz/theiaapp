@@ -1,0 +1,54 @@
+{
+  "project_info": {
+    "project_number": "442015090752",
+    "project_id": "theia-35fb0",
+    "storage_bucket": "theia-35fb0.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:442015090752:android:02fd32d737d9711d22f7a5",
+        "android_client_info": {
+          "package_name": "com.example.theiaapp"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "442015090752-8hg5k98ual2b8jn5u874jqehsq4jejip.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.theiaapp",
+            "certificate_hash": "f5e11b4a3401c230b1cbc4a045677a6a119cabce"
+          }
+        },
+        {
+          "client_id": "442015090752-f2d5sbrjndolcc7u6ttgdorjlili17db.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAJlVDa3bystrNB02OHOoX4AZ395KUU4S0"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "442015090752-f2d5sbrjndolcc7u6ttgdorjlili17db.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "442015090752-9t1c9ivin5tcc4ssaj9c0rgo2o9f18u9.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.theiaapp"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
