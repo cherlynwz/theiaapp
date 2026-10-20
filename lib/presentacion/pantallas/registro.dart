@@ -1,6 +1,6 @@
-import '../../logica/autenticacion_service.dart';
 import 'package:flutter/material.dart';
 
+import '../../logica/autenticacion_service.dart';
 import '../estilos/styles.dart';
 
 class Registro extends StatefulWidget {
@@ -24,58 +24,44 @@ class _RegistroState extends State<Registro> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.fondo,
-
       appBar: AppBar(
         backgroundColor: AppColors.fondo,
         foregroundColor: AppColors.crema,
         elevation: 0,
       ),
-
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.fromLTRB(28, 10, 28, 35),
-
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
-
             children: [
               const Text('Crear cuenta', style: AppStyles.tituloGrande),
-
               const SizedBox(height: 8),
-
               const Text(
                 'Regístrate para disfrutar de THEIA',
                 style: AppStyles.textoNormal,
               ),
-
               const SizedBox(height: 30),
-
               _campo(
                 controller: nombreController,
                 titulo: 'Nombre completo',
                 icono: Icons.person_outline,
               ),
-
               const SizedBox(height: 16),
-
               _campo(
                 controller: telefonoController,
                 titulo: 'Teléfono',
                 icono: Icons.phone_outlined,
                 tipo: TextInputType.phone,
               ),
-
               const SizedBox(height: 16),
-
               _campo(
                 controller: correoController,
                 titulo: 'Correo electrónico',
                 icono: Icons.email_outlined,
                 tipo: TextInputType.emailAddress,
               ),
-
               const SizedBox(height: 16),
-
               TextField(
                 controller: passwordController,
                 obscureText: ocultarPassword,
@@ -97,9 +83,13 @@ class _RegistroState extends State<Registro> {
                       ),
                     ),
               ),
-
+              const SizedBox(height: 8),
+              const Text(
+                'Usa al menos 8 caracteres con mayúscula, minúscula, '
+                'número y símbolo. Evita tu nombre o datos personales.',
+                style: AppStyles.textoNormal,
+              ),
               const SizedBox(height: 16),
-
               TextField(
                 controller: confirmarController,
                 obscureText: ocultarConfirmacion,
@@ -124,19 +114,16 @@ class _RegistroState extends State<Registro> {
                       ),
                     ),
               ),
-
               const SizedBox(height: 28),
-
               SizedBox(
                 height: 55,
-
                 child: ElevatedButton(
                   onPressed: () async {
                     String nombre = nombreController.text.trim();
                     String telefono = telefonoController.text.trim();
                     String correo = correoController.text.trim();
-                    String password = passwordController.text.trim();
-                    String confirmar = confirmarController.text.trim();
+                    String password = passwordController.text;
+                    String confirmar = confirmarController.text;
 
                     if (nombre.isEmpty ||
                         telefono.isEmpty ||
@@ -148,6 +135,18 @@ class _RegistroState extends State<Registro> {
                           content: Text('Completa todos los campos'),
                         ),
                       );
+
+                      return;
+                    }
+
+                    final errorPassword = AutenticacionService.validarPassword(
+                      password,
+                    );
+
+                    if (errorPassword != null) {
+                      ScaffoldMessenger.of(
+                        context,
+                      ).showSnackBar(SnackBar(content: Text(errorPassword)));
 
                       return;
                     }
@@ -164,8 +163,10 @@ class _RegistroState extends State<Registro> {
 
                     try {
                       await AutenticacionService().registrar(
-                        nombre: nombre, correo: correo,
-                        password: password, telefono: telefono,
+                        nombre: nombre,
+                        correo: correo,
+                        password: password,
+                        telefono: telefono,
                       );
 
                       if (!context.mounted) return;
@@ -185,7 +186,10 @@ class _RegistroState extends State<Registro> {
                       } else if (e.code == 'invalid-email') {
                         mensaje = 'El correo electrónico no es válido';
                       } else if (e.code == 'weak-password') {
-                        mensaje = 'La contraseña es demasiado débil';
+                        mensaje =
+                            'La contraseña no cumple los requisitos '
+                            'de seguridad. Usa al menos 8 caracteres '
+                            'con mayúscula, minúscula, número y símbolo.';
                       }
 
                       if (!context.mounted) return;
@@ -203,42 +207,33 @@ class _RegistroState extends State<Registro> {
                       );
                     }
                   },
-
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppColors.naranja,
                     foregroundColor: AppColors.negro,
-
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(15),
                     ),
                   ),
-
                   child: const Text(
                     'CREAR CUENTA',
                     style: AppStyles.textoBoton,
                   ),
                 ),
               ),
-
               const SizedBox(height: 20),
-
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
-
                 children: [
                   const Text(
                     '¿Ya tienes una cuenta?',
                     style: AppStyles.textoNormal,
                   ),
-
                   TextButton(
                     onPressed: () {
                       Navigator.pop(context);
                     },
-
                     child: const Text(
                       'Inicia sesión',
-
                       style: TextStyle(
                         color: AppColors.naranja,
                         fontWeight: FontWeight.bold,
@@ -263,9 +258,7 @@ class _RegistroState extends State<Registro> {
     return TextField(
       controller: controller,
       keyboardType: tipo,
-
       style: const TextStyle(color: AppColors.crema),
-
       decoration: _decoracion(titulo, icono),
     );
   }
@@ -273,23 +266,16 @@ class _RegistroState extends State<Registro> {
   InputDecoration _decoracion(String titulo, IconData icono) {
     return InputDecoration(
       labelText: titulo,
-
       labelStyle: const TextStyle(color: AppColors.textoSecundario),
-
       prefixIcon: Icon(icono, color: AppColors.naranja),
-
       filled: true,
       fillColor: AppColors.tarjeta,
-
       enabledBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(15),
-
         borderSide: const BorderSide(color: AppColors.borde),
       ),
-
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(15),
-
         borderSide: const BorderSide(color: AppColors.naranja),
       ),
     );
