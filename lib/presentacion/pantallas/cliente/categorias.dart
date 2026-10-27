@@ -130,9 +130,7 @@ class _CategoriasState extends State<Categorias> {
 
       final nombre = producto.nombre.toLowerCase();
 
-      final descripcion = producto.descripcion.toLowerCase();
-
-      return nombre.contains(texto) || descripcion.contains(texto);
+      return nombre.contains(texto);
     }).toList();
   }
 
