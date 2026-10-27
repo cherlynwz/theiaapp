@@ -1,7 +1,9 @@
-import 'package:firebase_auth/firebase_auth.dart' show FirebaseAuthException;
+import 'package:firebase_auth/firebase_auth.dart'
+    show FirebaseAuth, FirebaseAuthException;
 
 import '../datos/dao/autenticacion_dao.dart';
 import '../modelos/usuario.dart';
+import 'carrito_provider.dart';
 import 'sesion.dart';
 
 class AutenticacionException implements Exception {
@@ -19,7 +21,9 @@ class AutenticacionService {
   Future<Usuario> iniciarConCorreo(String correo, String password) async {
     try {
       final usuario = await _dao.iniciarConCorreo(correo, password);
-      Sesion.iniciarSesion(usuario);
+
+      await _prepararSesion(usuario);
+
       return usuario;
     } on FirebaseAuthException catch (e) {
       throw AutenticacionException(e.code);
@@ -31,13 +35,33 @@ class AutenticacionService {
       final usuario = await _dao.iniciarConGoogle();
 
       if (usuario != null) {
-        Sesion.iniciarSesion(usuario);
+        await _prepararSesion(usuario);
       }
 
       return usuario;
     } on FirebaseAuthException catch (e) {
       throw AutenticacionException(e.code);
     }
+  }
+
+  // Carga el carrito de la cuenta antes de continuar al inicio.
+  Future<void> _prepararSesion(Usuario usuario) async {
+    Sesion.cerrarSesion();
+
+    final uid = FirebaseAuth.instance.currentUser?.uid;
+
+    if (uid == null || uid.isEmpty) {
+      throw AutenticacionException('usuario-no-autenticado');
+    }
+
+    try {
+      await CarritoProvider.instance.conectarUsuario(uid);
+    } catch (_) {
+      Sesion.cerrarSesion();
+      throw AutenticacionException('carrito-no-disponible');
+    }
+
+    Sesion.iniciarSesion(usuario);
   }
 
   static String? validarPassword(String password) {
