@@ -127,4 +127,89 @@ class AutenticacionService {
       throw AutenticacionException(e.code);
     }
   }
+
+  // VALIDAR NOMBRE DEL PERFIL
+  static String? validarNombrePerfil(String valor) {
+    final nombre = valor.trim().replaceAll(RegExp(r'\s+'), ' ');
+
+    if (nombre.isEmpty) {
+      return 'Ingresa tu nombre';
+    }
+
+    if (nombre.runes.length > 100) {
+      return 'El nombre debe tener como máximo 100 caracteres';
+    }
+
+    final formato = RegExp(
+      r"^\p{L}[\p{L}\p{M}]*(?:[ '\u2019\u002D]\p{L}[\p{L}\p{M}]*)*$",
+      unicode: true,
+    );
+
+    if (!formato.hasMatch(nombre)) {
+      return 'Usa letras, espacios, apóstrofos o guiones';
+    }
+
+    return null;
+  }
+
+  // VALIDAR TELÉFONO DEL PERFIL
+  static String? validarTelefonoPerfil(String valor) {
+    if (!RegExp(r'^[0-9]{10}$').hasMatch(valor.trim())) {
+      return 'Ingresa un teléfono de exactamente 10 dígitos';
+    }
+
+    return null;
+  }
+
+  // GUARDAR PERFIL Y ACTUALIZAR LA SESIÓN
+  Future<Usuario> actualizarPerfil({
+    required String nombre,
+    required String telefono,
+  }) async {
+    final nombreLimpio = nombre.trim().replaceAll(RegExp(r'\s+'), ' ');
+    final telefonoLimpio = telefono.trim();
+
+    if (validarNombrePerfil(nombreLimpio) != null) {
+      throw AutenticacionException('nombre-invalido');
+    }
+
+    if (validarTelefonoPerfil(telefonoLimpio) != null) {
+      throw AutenticacionException('telefono-invalido');
+    }
+
+    final usuarioActual = Sesion.usuarioActual;
+    final uid = FirebaseAuth.instance.currentUser?.uid;
+
+    if (usuarioActual == null || uid == null) {
+      throw AutenticacionException('usuario-no-autenticado');
+    }
+
+    try {
+      await _dao.actualizarPerfil(
+        nombre: nombreLimpio,
+        telefono: telefonoLimpio,
+      );
+
+      // Evita modificar una sesión que haya cambiado durante el guardado.
+      if (FirebaseAuth.instance.currentUser?.uid != uid ||
+          !identical(Sesion.usuarioActual, usuarioActual)) {
+        throw AutenticacionException('sesion-cambiada');
+      }
+
+      final actualizado = Usuario(
+        id: usuarioActual.id,
+        nombre: nombreLimpio,
+        correo: usuarioActual.correo,
+        password: usuarioActual.password,
+        telefono: telefonoLimpio,
+        rol: usuarioActual.rol,
+      );
+
+      Sesion.iniciarSesion(actualizado);
+
+      return actualizado;
+    } on FirebaseAuthException catch (e) {
+      throw AutenticacionException(e.code);
+    }
+  }
 }

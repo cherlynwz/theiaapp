@@ -6,10 +6,16 @@ import '../../../logica/sesion.dart';
 import '../login.dart';
 import 'pedidos.dart';
 import 'ubicacion.dart';
+import 'editar_perfil.dart';
 
-class PerfilCliente extends StatelessWidget {
+class PerfilCliente extends StatefulWidget {
   const PerfilCliente({super.key});
 
+  @override
+  State<PerfilCliente> createState() => _PerfilClienteState();
+}
+
+class _PerfilClienteState extends State<PerfilCliente> {
   // ============================================================
   // CONFIGURACIÓN
   // ============================================================
@@ -19,8 +25,7 @@ class PerfilCliente extends StatelessWidget {
   static const String numeroWhatsApp = '527721464993';
 
   // Dirección de THEIA
-  static const String direccionTheia =
-      'Leona Vicario 72, San Antonio, 42300 Ixmiquilpan, Hgo.';
+
 
   // ============================================================
   // BUILD
@@ -98,8 +103,34 @@ class PerfilCliente extends StatelessWidget {
                   ? 'Nombre, teléfono y correo'
                   : '${usuario.nombre} • ${usuario.correo}',
 
-              onTap: () {
-                _mostrarDatosPersonales(context);
+              onTap: () async {
+                final actualizado = await Navigator.push<bool>(
+                  context,
+                  MaterialPageRoute(builder: (_) => const EditarPerfil()),
+                );
+
+                if (!context.mounted) return;
+
+                if (actualizado == true) {
+                  setState(() {});
+
+                  ScaffoldMessenger.of(context)
+                    ..clearSnackBars()
+                    ..showSnackBar(
+                      SnackBar(
+                        backgroundColor: AppColors.tarjetaClara,
+                        behavior: SnackBarBehavior.floating,
+                        duration: const Duration(seconds: 2),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(14),
+                        ),
+                        content: const Text(
+                          'Perfil actualizado correctamente',
+                          style: TextStyle(color: AppColors.crema),
+                        ),
+                      ),
+                    );
+                }
               },
             ),
 
@@ -382,8 +413,6 @@ class PerfilCliente extends StatelessWidget {
   // GOOGLE MAPS
   // ============================================================
 
-
-
   // ============================================================
   // WHATSAPP
   // ============================================================
@@ -439,140 +468,6 @@ class PerfilCliente extends StatelessWidget {
   }
 
   // ============================================================
-  // DATOS PERSONALES
-  // ============================================================
-
-  void _mostrarDatosPersonales(BuildContext context) {
-    final usuario = Sesion.usuarioActual;
-
-    if (usuario == null) {
-      _mensajeTemporal(context, 'No hay una sesión activa');
-
-      return;
-    }
-
-    showDialog(
-      context: context,
-
-      builder: (context) {
-        return AlertDialog(
-          backgroundColor: AppColors.tarjeta,
-
-          title: const Text(
-            'Datos personales',
-
-            style: TextStyle(
-              color: AppColors.crema,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-
-            crossAxisAlignment: CrossAxisAlignment.start,
-
-            children: [
-              // ==================================================
-              // NOMBRE
-              // ==================================================
-              const Text(
-                'Nombre',
-
-                style: TextStyle(
-                  color: AppColors.naranja,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-
-              const SizedBox(height: 4),
-
-              Text(
-                usuario.nombre,
-
-                style: const TextStyle(color: AppColors.crema),
-              ),
-
-              const SizedBox(height: 15),
-
-              // ==================================================
-              // CORREO
-              // ==================================================
-              const Text(
-                'Correo',
-
-                style: TextStyle(
-                  color: AppColors.naranja,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-
-              const SizedBox(height: 4),
-
-              Text(
-                usuario.correo,
-
-                style: const TextStyle(color: AppColors.crema),
-              ),
-
-              const SizedBox(height: 15),
-
-              // ==================================================
-              // TELÉFONO
-              // ==================================================
-              const Text(
-                'Teléfono',
-
-                style: TextStyle(
-                  color: AppColors.naranja,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-
-              const SizedBox(height: 4),
-
-              Text(
-                usuario.telefono.isEmpty ? 'No registrado' : usuario.telefono,
-
-                style: const TextStyle(color: AppColors.crema),
-              ),
-            ],
-          ),
-
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.pop(context);
-              },
-
-              child: const Text(
-                'Cerrar',
-
-                style: TextStyle(
-                  color: AppColors.naranja,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ),
-          ],
-        );
-      },
-    );
-  }
-
-  // ============================================================
-  // MENSAJE TEMPORAL
-  // ============================================================
-
-  void _mensajeTemporal(BuildContext context, String mensaje) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        backgroundColor: AppColors.tarjetaClara,
-
-        content: Text(mensaje, style: const TextStyle(color: AppColors.crema)),
-      ),
-    );
-  }
 
   // ============================================================
   // CERRAR SESIÓN

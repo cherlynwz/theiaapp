@@ -97,4 +97,21 @@ class AutenticacionDAO {
   Future<void> recuperarContrasena(String correo) async {
     await _auth.sendPasswordResetEmail(email: correo.trim());
   }
+
+  // ACTUALIZAR NOMBRE Y TELÉFONO DEL USUARIO AUTENTICADO
+  Future<void> actualizarPerfil({
+    required String nombre,
+    required String telefono,
+  }) async {
+    final usuario = _auth.currentUser;
+
+    if (usuario == null) {
+      throw FirebaseAuthException(code: 'usuario-no-autenticado');
+    }
+
+    await _db.collection('usuarios').doc(usuario.uid).update({
+      'nombre': nombre,
+      'telefono': telefono,
+    });
+  }
 }
