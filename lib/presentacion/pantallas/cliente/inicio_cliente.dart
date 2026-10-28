@@ -28,67 +28,81 @@ class _InicioClienteState extends State<InicioCliente> {
     PerfilCliente(),
   ];
 
+  Widget _iconoActivo(IconData icono) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 17, vertical: 5),
+      decoration: BoxDecoration(
+        color: AppColors.naranja.withValues(alpha: 0.16),
+        borderRadius: BorderRadius.circular(14),
+      ),
+      child: Icon(icono),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.fondo,
-
       body: IndexedStack(index: paginaActual, children: paginas),
-
-      // ===========================================================
-      // NAVEGACIÓN INFERIOR
-      // ===========================================================
       bottomNavigationBar: Container(
         decoration: BoxDecoration(
-          color: AppColors.fondoSecundario,
-          border: Border(top: BorderSide(color: AppColors.borde, width: 0.7)),
+          color: AppColors.tarjeta,
+          border: const Border(
+            top: BorderSide(color: AppColors.borde, width: 0.7),
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: AppColors.crema.withValues(alpha: 0.04),
+              blurRadius: 16,
+              offset: const Offset(0, -4),
+            ),
+          ],
         ),
         child: SafeArea(
-          child: BottomNavigationBar(
-            currentIndex: paginaActual,
-
-            onTap: (index) {
-              setState(() {
-                paginaActual = index;
-              });
-            },
-
-            type: BottomNavigationBarType.fixed,
-            backgroundColor: AppColors.fondoSecundario,
-            elevation: 0,
-
-            selectedItemColor: AppColors.naranja,
-            unselectedItemColor: AppColors.textoSecundario,
-
-            selectedLabelStyle: const TextStyle(
-              fontWeight: FontWeight.bold,
-              fontSize: 12,
+          top: false,
+          child: Padding(
+            padding: const EdgeInsets.only(top: 5, bottom: 3),
+            child: BottomNavigationBar(
+              currentIndex: paginaActual,
+              onTap: (index) {
+                setState(() {
+                  paginaActual = index;
+                });
+              },
+              type: BottomNavigationBarType.fixed,
+              backgroundColor: AppColors.tarjeta,
+              elevation: 0,
+              selectedItemColor: AppColors.naranjaOscuro,
+              unselectedItemColor: AppColors.textoSecundario,
+              selectedFontSize: 11,
+              unselectedFontSize: 11,
+              selectedLabelStyle: const TextStyle(fontWeight: FontWeight.w700),
+              unselectedLabelStyle: const TextStyle(
+                fontWeight: FontWeight.w500,
+              ),
+              items: [
+                BottomNavigationBarItem(
+                  icon: const Icon(Icons.home_outlined),
+                  activeIcon: _iconoActivo(Icons.home_rounded),
+                  label: 'Inicio',
+                ),
+                BottomNavigationBarItem(
+                  icon: const Icon(Icons.grid_view_outlined),
+                  activeIcon: _iconoActivo(Icons.grid_view_rounded),
+                  label: 'Categorías',
+                ),
+                BottomNavigationBarItem(
+                  icon: const Icon(Icons.shopping_bag_outlined),
+                  activeIcon: _iconoActivo(Icons.shopping_bag),
+                  label: 'Carrito',
+                ),
+                BottomNavigationBarItem(
+                  icon: const Icon(Icons.person_outline_rounded),
+                  activeIcon: _iconoActivo(Icons.person_rounded),
+                  label: 'Perfil',
+                ),
+              ],
             ),
-
-            unselectedLabelStyle: const TextStyle(fontSize: 11),
-
-            items: const [
-              BottomNavigationBarItem(
-                icon: Icon(Icons.home_outlined),
-                activeIcon: Icon(Icons.home_rounded),
-                label: 'Inicio',
-              ),
-              BottomNavigationBarItem(
-                icon: Icon(Icons.grid_view_outlined),
-                activeIcon: Icon(Icons.grid_view_rounded),
-                label: 'Categorías',
-              ),
-              BottomNavigationBarItem(
-                icon: Icon(Icons.shopping_bag_outlined),
-                activeIcon: Icon(Icons.shopping_bag),
-                label: 'Carrito',
-              ),
-              BottomNavigationBarItem(
-                icon: Icon(Icons.person_outline_rounded),
-                activeIcon: Icon(Icons.person_rounded),
-                label: 'Perfil',
-              ),
-            ],
           ),
         ),
       ),
@@ -113,16 +127,13 @@ class _InicioContenidoState extends State<_InicioContenido> {
   List<Producto> productos = [];
 
   bool cargando = true;
+  String? errorCarga;
 
   @override
   void initState() {
     super.initState();
     cargarProductos();
   }
-
-  // =============================================================
-  // CARGAR PRODUCTOS DESDE SQLITE
-  // =============================================================
 
   Future<void> cargarProductos() async {
     try {
@@ -133,6 +144,7 @@ class _InicioContenidoState extends State<_InicioContenido> {
       setState(() {
         productos = datos;
         cargando = false;
+        errorCarga = null;
       });
     } catch (e) {
       debugPrint('ERROR AL CARGAR PRODUCTOS: $e');
@@ -141,88 +153,57 @@ class _InicioContenidoState extends State<_InicioContenido> {
 
       setState(() {
         cargando = false;
+        errorCarga = 'No se pudieron cargar los productos.';
       });
     }
   }
 
-  // =============================================================
-  // PANTALLA
-  // =============================================================
-
   @override
   Widget build(BuildContext context) {
     return SafeArea(
+      bottom: false,
       child: RefreshIndicator(
-        color: AppColors.naranja,
+        color: AppColors.naranjaOscuro,
         onRefresh: cargarProductos,
-
         child: SingleChildScrollView(
           physics: const AlwaysScrollableScrollPhysics(),
+          padding: const EdgeInsets.fromLTRB(20, 20, 20, 28),
+          child: Center(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 760),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _encabezado(),
+                  const SizedBox(height: 24),
 
-          padding: const EdgeInsets.fromLTRB(22, 30, 22, 35),
+                  _bannerTheia(),
+                  const SizedBox(height: 30),
 
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+                  if (errorCarga != null) ...[
+                    _avisoError(),
+                    const SizedBox(height: 20),
+                  ],
 
-            children: [
-              // ===================================================
-              // SALUDO
-              // ===================================================
-              _encabezado(),
+                  _tituloSeccion('Productos destacados'),
+                  const SizedBox(height: 18),
 
-              const SizedBox(height: 26),
+                  _productosDestacados(),
+                  const SizedBox(height: 30),
 
-              // ===================================================
-              // BANNER THEIA
-              // ===================================================
-              _bannerTheia(),
+                  _especialDeHoy(),
+                  const SizedBox(height: 30),
 
-              const SizedBox(height: 35),
+                  _tituloSeccion('Más pedidos'),
+                  const SizedBox(height: 18),
 
-              // ===================================================
-              // PRODUCTOS DESTACADOS
-              // ===================================================
-              _tituloSeccion(
-                titulo: 'Productos destacados',
-                subtitulo: 'Selección especial de THEIA',
-                icono: Icons.auto_awesome_rounded,
+                  _productosMasPedidos(),
+                  const SizedBox(height: 28),
+
+                  _cierreTheia(),
+                ],
               ),
-
-              const SizedBox(height: 17),
-
-              _productosDestacados(),
-
-              const SizedBox(height: 40),
-
-              // ===================================================
-              // ESPECIAL DE HOY
-              // ===================================================
-              _especialDeHoy(),
-
-              const SizedBox(height: 40),
-
-              // ===================================================
-              // MÁS PEDIDOS
-              // ===================================================
-              _tituloSeccion(
-                titulo: 'Más pedidos',
-                subtitulo: 'Los favoritos de nuestros clientes',
-                icono: Icons.local_fire_department_rounded,
-              ),
-
-              const SizedBox(height: 17),
-
-              _productosMasPedidos(),
-
-              const SizedBox(height: 42),
-
-              // ===================================================
-              // CIERRE THEIA
-              // ===================================================
-              _cierreTheia(),
-
-              const SizedBox(height: 10),
-            ],
+            ),
           ),
         ),
       ),
@@ -234,126 +215,122 @@ class _InicioContenidoState extends State<_InicioContenido> {
   // =============================================================
 
   Widget _encabezado() {
-    final nombre = Sesion.usuarioActual?.nombre ?? 'Cliente';
+    final nombreGuardado = Sesion.usuarioActual?.nombre.trim() ?? '';
+    final nombre = nombreGuardado.isEmpty ? 'Cliente' : nombreGuardado;
 
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 2),
-      child: Row(
-        children: [
-          Container(
-            width: 38,
-            height: 38,
-            decoration: BoxDecoration(
-              color: AppColors.tarjeta,
-              shape: BoxShape.circle,
-              border: Border.all(color: AppColors.borde),
-            ),
-            child: const Icon(
-              Icons.person_outline_rounded,
-              color: AppColors.naranja,
-              size: 20,
-            ),
+    return Row(
+      children: [
+        Container(
+          width: 46,
+          height: 46,
+          decoration: BoxDecoration(
+            color: AppColors.tarjeta,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: AppColors.borde),
           ),
-
-          const SizedBox(width: 10),
-
-          Expanded(
-            child: Text(
-              'Hola, $nombre',
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: const TextStyle(
-                color: AppColors.crema,
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
+          child: const Icon(
+            Icons.person_outline_rounded,
+            color: AppColors.naranjaOscuro,
+            size: 25,
+          ),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                'QUÉ GUSTO VERTE',
+                style: TextStyle(
+                  color: AppColors.textoSecundario,
+                  fontSize: 10,
+                  letterSpacing: 1.5,
+                  fontWeight: FontWeight.w600,
+                ),
               ),
-            ),
+              const SizedBox(height: 4),
+              Text(
+                'Hola, $nombre',
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(
+                  color: AppColors.crema,
+                  fontSize: 21,
+                  fontWeight: FontWeight.w700,
+                  height: 1.2,
+                ),
+              ),
+            ],
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 
   // =============================================================
-  // BANNER THEIA
+  // BANNER SIN FRANJAS LATERALES
   // =============================================================
 
   Widget _bannerTheia() {
     return Container(
       width: double.infinity,
       height: 180,
-
+      clipBehavior: Clip.antiAlias,
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(24),
-
+        color: AppColors.tarjetaClara,
+        borderRadius: BorderRadius.circular(22),
         border: Border.all(color: AppColors.borde),
-
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.18),
-            blurRadius: 16,
-            offset: const Offset(0, 7),
+            color: AppColors.crema.withValues(alpha: 0.07),
+            blurRadius: 14,
+            offset: const Offset(0, 5),
           ),
         ],
       ),
-
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(23),
-
-        child: Image.asset(
-          'assets/imagenes/theia.png',
-
-          width: double.infinity,
-          height: 180,
-
-          fit: BoxFit.cover,
-
-          errorBuilder: (context, error, stackTrace) {
-            return Container(
-              color: AppColors.tarjeta,
-
-              child: const Center(
-                child: Icon(
-                  Icons.bakery_dining_outlined,
-                  color: AppColors.naranja,
-                  size: 55,
-                ),
-              ),
-            );
-          },
-        ),
+      child: Image.asset(
+        'assets/imagenes/theia.png',
+        width: double.infinity,
+        height: 180,
+        fit: BoxFit.cover,
+        errorBuilder: (context, error, stackTrace) {
+          return const Center(
+            child: Icon(
+              Icons.bakery_dining_outlined,
+              color: AppColors.naranjaOscuro,
+              size: 48,
+            ),
+          );
+        },
       ),
     );
   }
 
   // =============================================================
-  // TÍTULO DE SECCIONES
+  // TÍTULOS CENTRADOS CON LÍNEAS
   // =============================================================
 
-  Widget _tituloSeccion({
-    required String titulo,
-    required String subtitulo,
-    required IconData icono,
-  }) {
+  Widget _tituloSeccion(String titulo) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        Expanded(child: Container(height: 1, color: AppColors.borde)),
-
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 12),
+        const Expanded(child: Divider(color: AppColors.borde, thickness: 1)),
+        const SizedBox(width: 12),
+        Flexible(
+          flex: 5,
+          fit: FlexFit.loose,
           child: Text(
             titulo,
             textAlign: TextAlign.center,
             style: const TextStyle(
               color: AppColors.crema,
               fontSize: 19,
-              fontWeight: FontWeight.bold,
+              fontWeight: FontWeight.w700,
             ),
           ),
         ),
-
-        Expanded(child: Container(height: 1, color: AppColors.borde)),
+        const SizedBox(width: 12),
+        const Expanded(child: Divider(color: AppColors.borde, thickness: 1)),
       ],
     );
   }
@@ -363,9 +340,7 @@ class _InicioContenidoState extends State<_InicioContenido> {
   // =============================================================
 
   Widget _productosDestacados() {
-    if (cargando) {
-      return _cargandoProductos();
-    }
+    if (cargando) return _cargandoProductos();
 
     final destacados = productos
         .where((producto) => producto.destacado == 1)
@@ -373,267 +348,12 @@ class _InicioContenidoState extends State<_InicioContenido> {
 
     if (destacados.isEmpty) {
       return _sinProductos(
-        icono: Icons.auto_awesome_outlined,
+        icono: Icons.cake_outlined,
         texto: 'Aún no hay productos destacados',
       );
     }
 
-    return SizedBox(
-      height: 255,
-
-      child: ListView.separated(
-        scrollDirection: Axis.horizontal,
-
-        itemCount: destacados.length,
-
-        separatorBuilder: (context, index) {
-          return const SizedBox(width: 15);
-        },
-
-        itemBuilder: (context, index) {
-          return _ProductoInicio(producto: destacados[index]);
-        },
-      ),
-    );
-  }
-
-  // =============================================================
-  // ESPECIAL DE HOY
-  // =============================================================
-
-  Widget _especialDeHoy() {
-    if (cargando) {
-      return const SizedBox.shrink();
-    }
-
-    final destacados = productos
-        .where((producto) => producto.destacado == 1)
-        .toList();
-
-    // Si no hay destacados, usamos el primer producto disponible.
-    Producto? especial;
-
-    if (destacados.isNotEmpty) {
-      especial = destacados.first;
-    } else if (productos.isNotEmpty) {
-      especial = productos.first;
-    }
-
-    if (especial == null) {
-      return const SizedBox.shrink();
-    }
-
-    final productoEspecial = especial;
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-
-      children: [
-        // ETIQUETA
-        Center(
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 8),
-
-            decoration: BoxDecoration(
-              color: AppColors.naranja.withValues(alpha: 0.12),
-              borderRadius: BorderRadius.circular(30),
-
-              border: Border.all(color: AppColors.naranja.withValues(alpha: 0.35)),
-            ),
-
-            child: const Row(
-              mainAxisSize: MainAxisSize.min,
-
-              children: [
-                Icon(Icons.star_rounded, color: AppColors.naranja, size: 18),
-
-                SizedBox(width: 7),
-
-                Text(
-                  'ESPECIAL DE HOY',
-
-                  style: TextStyle(
-                    color: AppColors.naranja,
-                    fontSize: 12,
-                    fontWeight: FontWeight.bold,
-                    letterSpacing: 1.2,
-                  ),
-                ),
-
-                SizedBox(width: 7),
-
-                Icon(Icons.star_rounded, color: AppColors.naranja, size: 18),
-              ],
-            ),
-          ),
-        ),
-
-        const SizedBox(height: 16),
-
-        // TARJETA GRANDE
-        Container(
-          width: double.infinity,
-
-          decoration: BoxDecoration(
-            color: AppColors.tarjeta,
-            borderRadius: BorderRadius.circular(24),
-
-            border: Border.all(color: AppColors.borde),
-
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.14),
-                blurRadius: 15,
-                offset: const Offset(0, 7),
-              ),
-            ],
-          ),
-
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-
-            children: [
-              // IMAGEN
-              ClipRRect(
-                borderRadius: const BorderRadius.only(
-                  topLeft: Radius.circular(23),
-                  topRight: Radius.circular(23),
-                ),
-
-                child: SizedBox(
-                  width: double.infinity,
-                  height: 190,
-
-                  child: _imagenEspecial(productoEspecial),
-                ),
-              ),
-
-              // INFORMACIÓN
-              Padding(
-                padding: const EdgeInsets.fromLTRB(19, 17, 19, 19),
-
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.end,
-
-                  children: [
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-
-                        children: [
-                          Text(
-                            productoEspecial.nombre,
-
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-
-                            style: const TextStyle(
-                              color: AppColors.crema,
-                              fontSize: 20,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-
-                          const SizedBox(height: 6),
-
-                          Text(
-                            productoEspecial.categoria,
-
-                            style: const TextStyle(
-                              color: AppColors.textoSecundario,
-                              fontSize: 12,
-                            ),
-                          ),
-
-                          const SizedBox(height: 5),
-
-                          const Text(
-                            'Una opción especial seleccionada para ti',
-
-                            style: TextStyle(
-                              color: AppColors.textoSecundario,
-                              fontSize: 12,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-
-                    const SizedBox(width: 12),
-
-                    Text(
-                      '\$${productoEspecial.precio.toStringAsFixed(2)}',
-
-                      style: const TextStyle(
-                        color: AppColors.naranja,
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ),
-      ],
-    );
-  }
-
-  // =============================================================
-  // IMAGEN DEL ESPECIAL DE HOY
-  // =============================================================
-
-  Widget _imagenEspecial(Producto producto) {
-    final ruta = producto.imagen.trim();
-
-    if (ruta.isEmpty) {
-      return _imagenEspecialPredeterminada();
-    }
-
-    // Compatibilidad con productos antiguos que tengan URL.
-    if (ruta.startsWith('http://') || ruta.startsWith('https://')) {
-      return Image.network(
-        ruta,
-        width: double.infinity,
-        height: 190,
-        fit: BoxFit.cover,
-
-        errorBuilder: (context, error, stackTrace) {
-          return _imagenEspecialPredeterminada();
-        },
-      );
-    }
-
-    final archivo = File(ruta);
-
-    if (!archivo.existsSync()) {
-      return _imagenEspecialPredeterminada();
-    }
-
-    return Image.file(
-      archivo,
-      width: double.infinity,
-      height: 190,
-      fit: BoxFit.cover,
-
-      errorBuilder: (context, error, stackTrace) {
-        return _imagenEspecialPredeterminada();
-      },
-    );
-  }
-
-  Widget _imagenEspecialPredeterminada() {
-    return Container(
-      width: double.infinity,
-      height: 190,
-
-      color: AppColors.tarjetaClara,
-
-      child: const Center(
-        child: Icon(Icons.cake_outlined, color: AppColors.naranja, size: 58),
-      ),
-    );
+    return _listaProductos(destacados);
   }
 
   // =============================================================
@@ -641,9 +361,7 @@ class _InicioContenidoState extends State<_InicioContenido> {
   // =============================================================
 
   Widget _productosMasPedidos() {
-    if (cargando) {
-      return _cargandoProductos();
-    }
+    if (cargando) return _cargandoProductos();
 
     final masPedidos = productos
         .where((producto) => producto.masPedido == 1)
@@ -656,110 +374,187 @@ class _InicioContenidoState extends State<_InicioContenido> {
       );
     }
 
-    return SizedBox(
-      height: 255,
+    return _listaProductos(masPedidos);
+  }
 
-      child: ListView.separated(
-        scrollDirection: Axis.horizontal,
+  // =============================================================
+  // LISTA CON TARJETAS MÁS ANCHAS
+  // =============================================================
 
-        itemCount: masPedidos.length,
+  Widget _listaProductos(List<Producto> lista) {
+    // Reserva espacio según el tamaño de texto del dispositivo.
+    final altoNombre = MediaQuery.textScalerOf(context).scale(16) * 1.25 * 2;
+    final altoCategoria = MediaQuery.textScalerOf(context).scale(12) * 1.3;
+    final altoPrecio = MediaQuery.textScalerOf(context).scale(19) * 1.25;
 
-        separatorBuilder: (context, index) {
-          return const SizedBox(width: 15);
-        },
+    final altoTarjeta =
+        140 + 26 + altoNombre + 6 + altoCategoria + 14 + altoPrecio;
 
-        itemBuilder: (context, index) {
-          return _ProductoInicio(producto: masPedidos[index]);
-        },
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final anchoDisponible = constraints.maxWidth;
+
+        final ancho = anchoDisponible < 600 ? anchoDisponible * 0.72 : 280.0;
+
+        return SizedBox(
+          height: altoTarjeta + 8,
+          child: ListView.separated(
+            scrollDirection: Axis.horizontal,
+            padding: const EdgeInsets.only(bottom: 8, right: 4),
+            itemCount: lista.length,
+            separatorBuilder: (context, index) {
+              return const SizedBox(width: 15);
+            },
+            itemBuilder: (context, index) {
+              return _ProductoInicio(producto: lista[index], ancho: ancho);
+            },
+          ),
+        );
+      },
+    );
+  }
+
+  // =============================================================
+  // ESPECIAL DE HOY
+  // =============================================================
+
+  Widget _especialDeHoy() {
+    if (cargando || productos.isEmpty) {
+      return const SizedBox.shrink();
+    }
+
+    final destacados = productos
+        .where((producto) => producto.destacado == 1)
+        .toList();
+
+    final especial = destacados.isNotEmpty ? destacados.first : productos.first;
+
+    return Container(
+      width: double.infinity,
+      clipBehavior: Clip.antiAlias,
+      decoration: BoxDecoration(
+        color: AppColors.tarjeta,
+        borderRadius: BorderRadius.circular(22),
+        border: Border.all(color: AppColors.borde),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 16, 16, 12),
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 8),
+              decoration: BoxDecoration(
+                color: AppColors.naranja.withValues(alpha: 0.12),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: const Text(
+                'ESPECIAL DE HOY',
+                style: TextStyle(
+                  color: AppColors.naranjaOscuro,
+                  fontSize: 11,
+                  fontWeight: FontWeight.w700,
+                  letterSpacing: 1,
+                ),
+              ),
+            ),
+          ),
+          AspectRatio(
+            aspectRatio: 1.9,
+            child: _ImagenProductoInicio(
+              ruta: especial.imagen,
+              tamanoIcono: 58,
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.all(17),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  especial.categoria.toUpperCase(),
+                  style: const TextStyle(
+                    color: AppColors.textoSecundario,
+                    fontSize: 10,
+                    fontWeight: FontWeight.w600,
+                    letterSpacing: 1.2,
+                  ),
+                ),
+                const SizedBox(height: 7),
+                Text(
+                  especial.nombre,
+                  style: const TextStyle(
+                    color: AppColors.crema,
+                    fontSize: 20,
+                    fontWeight: FontWeight.w700,
+                    height: 1.25,
+                  ),
+                ),
+                const SizedBox(height: 7),
+                const Text(
+                  'Una opción especial seleccionada para ti',
+                  style: TextStyle(
+                    color: AppColors.textoSecundario,
+                    fontSize: 12,
+                    height: 1.4,
+                  ),
+                ),
+                const SizedBox(height: 14),
+                Text(
+                  '\$${especial.precio.toStringAsFixed(2)} MXN',
+                  style: const TextStyle(
+                    color: AppColors.naranjaOscuro,
+                    fontSize: 21,
+                    fontWeight: FontWeight.w700,
+                    height: 1.25,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }
 
   // =============================================================
-  // CIERRE VISUAL DE THEIA
+  // CIERRE
   // =============================================================
 
   Widget _cierreTheia() {
     return Container(
       width: double.infinity,
-
-      padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 25),
-
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 22),
       decoration: BoxDecoration(
-        color: AppColors.tarjeta,
-
-        borderRadius: BorderRadius.circular(24),
-
+        color: AppColors.tarjetaClara,
+        borderRadius: BorderRadius.circular(20),
         border: Border.all(color: AppColors.borde),
       ),
-
-      child: Column(
+      child: const Column(
         children: [
-          // ICONOS DECORATIVOS
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-
-            children: [
-              Icon(
-                Icons.bakery_dining_outlined,
-                color: AppColors.naranja.withValues(alpha: 0.75),
-                size: 23,
-              ),
-
-              const SizedBox(width: 14),
-
-              const Icon(
-                Icons.favorite_rounded,
-                color: AppColors.naranja,
-                size: 21,
-              ),
-
-              const SizedBox(width: 14),
-
-              Icon(
-                Icons.cake_outlined,
-                color: AppColors.naranja.withValues(alpha: 0.75),
-                size: 23,
-              ),
-            ],
+          Icon(
+            Icons.bakery_dining_outlined,
+            color: AppColors.naranjaOscuro,
+            size: 26,
           ),
-
-          const SizedBox(height: 15),
-
-          const Text(
-            'THEIA',
-
+          SizedBox(height: 10),
+          Text(
+            'Hecho con cariño en THEIA',
+            textAlign: TextAlign.center,
             style: TextStyle(
               color: AppColors.crema,
-              fontSize: 19,
-              fontWeight: FontWeight.bold,
-              letterSpacing: 2.5,
+              fontSize: 16,
+              fontWeight: FontWeight.w700,
             ),
           ),
-
-          const SizedBox(height: 8),
-
-          const Text(
-            'Preparado con dedicación para tus momentos dulces',
-
+          SizedBox(height: 7),
+          Text(
+            'Un detalle dulce para tus momentos especiales.',
             textAlign: TextAlign.center,
-
             style: TextStyle(
               color: AppColors.textoSecundario,
               fontSize: 12,
               height: 1.5,
-            ),
-          ),
-
-          const SizedBox(height: 17),
-
-          Container(
-            width: 55,
-            height: 2,
-
-            decoration: BoxDecoration(
-              color: AppColors.naranja.withValues(alpha: 0.45),
-              borderRadius: BorderRadius.circular(10),
             ),
           ),
         ],
@@ -774,8 +569,40 @@ class _InicioContenidoState extends State<_InicioContenido> {
   Widget _cargandoProductos() {
     return const SizedBox(
       height: 180,
+      child: Center(
+        child: CircularProgressIndicator(color: AppColors.naranjaOscuro),
+      ),
+    );
+  }
 
-      child: Center(child: CircularProgressIndicator(color: AppColors.naranja)),
+  // =============================================================
+  // ERROR DE CARGA
+  // =============================================================
+
+  Widget _avisoError() {
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: AppColors.tarjeta,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: AppColors.borde),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            errorCarga!,
+            style: const TextStyle(color: AppColors.crema, fontSize: 13),
+          ),
+          TextButton(
+            onPressed: cargarProductos,
+            child: const Text(
+              'Reintentar',
+              style: TextStyle(color: AppColors.naranjaOscuro),
+            ),
+          ),
+        ],
+      ),
     );
   }
 
@@ -786,26 +613,19 @@ class _InicioContenidoState extends State<_InicioContenido> {
   Widget _sinProductos({required IconData icono, required String texto}) {
     return Container(
       width: double.infinity,
-
-      padding: const EdgeInsets.symmetric(vertical: 30, horizontal: 20),
-
+      padding: const EdgeInsets.symmetric(vertical: 26, horizontal: 20),
       decoration: BoxDecoration(
         color: AppColors.tarjeta,
         borderRadius: BorderRadius.circular(18),
         border: Border.all(color: AppColors.borde),
       ),
-
       child: Column(
         children: [
-          Icon(icono, color: AppColors.textoSecundario, size: 34),
-
+          Icon(icono, color: AppColors.textoSecundario, size: 30),
           const SizedBox(height: 10),
-
           Text(
             texto,
-
             textAlign: TextAlign.center,
-
             style: const TextStyle(
               color: AppColors.textoSecundario,
               fontSize: 13,
@@ -823,98 +643,88 @@ class _InicioContenidoState extends State<_InicioContenido> {
 
 class _ProductoInicio extends StatelessWidget {
   final Producto producto;
+  final double ancho;
 
-  const _ProductoInicio({required this.producto});
+  const _ProductoInicio({required this.producto, required this.ancho});
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      width: 178,
-
+      width: ancho,
+      clipBehavior: Clip.antiAlias,
       decoration: BoxDecoration(
         color: AppColors.tarjeta,
-
-        borderRadius: BorderRadius.circular(21),
-
+        borderRadius: BorderRadius.circular(20),
         border: Border.all(color: AppColors.borde),
-
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.13),
-            blurRadius: 12,
-            offset: const Offset(0, 6),
+            color: AppColors.crema.withValues(alpha: 0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
           ),
         ],
       ),
-
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
-
         children: [
-          // =====================================================
-          // IMAGEN
-          // =====================================================
-          ClipRRect(
-            borderRadius: const BorderRadius.only(
-              topLeft: Radius.circular(20),
-              topRight: Radius.circular(20),
-            ),
-
-            child: SizedBox(
-              width: double.infinity,
-              height: 135,
-
-              child: _imagenProducto(),
+          SizedBox(
+            width: double.infinity,
+            height: 140,
+            child: _ImagenProductoInicio(
+              ruta: producto.imagen,
+              tamanoIcono: 45,
             ),
           ),
-
-          // =====================================================
-          // INFORMACIÓN
-          // =====================================================
           Expanded(
             child: Padding(
-              padding: const EdgeInsets.fromLTRB(13, 11, 13, 12),
-
+              padding: const EdgeInsets.fromLTRB(14, 12, 14, 14),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
-
                 children: [
                   Text(
                     producto.nombre,
-
-                    maxLines: 1,
+                    maxLines: 2,
                     overflow: TextOverflow.ellipsis,
-
                     style: const TextStyle(
                       color: AppColors.crema,
-                      fontSize: 15,
-                      fontWeight: FontWeight.bold,
+                      fontSize: 16,
+                      fontWeight: FontWeight.w700,
+                      height: 1.25,
                     ),
                   ),
-
-                  const SizedBox(height: 5),
-
+                  const SizedBox(height: 6),
                   Text(
                     producto.categoria,
-
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-
                     style: const TextStyle(
                       color: AppColors.textoSecundario,
-                      fontSize: 11,
+                      fontSize: 12,
+                      height: 1.3,
                     ),
                   ),
-
                   const Spacer(),
-
-                  Text(
-                    '\$${producto.precio.toStringAsFixed(2)}',
-
-                    style: const TextStyle(
-                      color: AppColors.naranja,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 17,
+                  Text.rich(
+                    TextSpan(
+                      children: [
+                        TextSpan(
+                          text: '\$${producto.precio.toStringAsFixed(2)}',
+                          style: const TextStyle(
+                            color: AppColors.naranjaOscuro,
+                            fontWeight: FontWeight.w700,
+                            fontSize: 19,
+                            height: 1.25,
+                          ),
+                        ),
+                        const TextSpan(
+                          text: ' MXN',
+                          style: TextStyle(
+                            color: AppColors.textoSecundario,
+                            fontSize: 10,
+                            height: 1.25,
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                 ],
@@ -925,70 +735,64 @@ class _ProductoInicio extends StatelessWidget {
       ),
     );
   }
+}
 
-  // =============================================================
-  // MOSTRAR IMAGEN DEL PRODUCTO
-  // =============================================================
+// ===============================================================
+// IMÁGENES DE PRODUCTOS
+// ===============================================================
 
-  Widget _imagenProducto() {
-    final ruta = producto.imagen.trim();
+class _ImagenProductoInicio extends StatelessWidget {
+  final String ruta;
+  final double tamanoIcono;
 
-    // SIN IMAGEN
-    if (ruta.isEmpty) {
-      return _imagenPredeterminada();
+  const _ImagenProductoInicio({required this.ruta, required this.tamanoIcono});
+
+  Widget _predeterminada() {
+    return Container(
+      color: AppColors.tarjetaClara,
+      alignment: Alignment.center,
+      child: Icon(
+        Icons.cake_outlined,
+        color: AppColors.naranja,
+        size: tamanoIcono,
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final imagen = ruta.trim();
+
+    if (imagen.isEmpty) {
+      return _predeterminada();
     }
 
-    // PRODUCTOS ANTIGUOS CON URL
-    if (ruta.startsWith('http://') || ruta.startsWith('https://')) {
+    if (imagen.startsWith('https://') || imagen.startsWith('http://')) {
       return Image.network(
-        ruta,
-
+        imagen,
         width: double.infinity,
-        height: 135,
-
+        height: double.infinity,
         fit: BoxFit.cover,
-
         errorBuilder: (context, error, stackTrace) {
-          return _imagenPredeterminada();
+          return _predeterminada();
         },
       );
     }
 
-    // PRODUCTOS CON IMAGEN LOCAL
-    final archivo = File(ruta);
+    final archivo = File(imagen);
 
     if (!archivo.existsSync()) {
-      return _imagenPredeterminada();
+      return _predeterminada();
     }
 
     return Image.file(
       archivo,
-
       width: double.infinity,
-      height: 135,
-
+      height: double.infinity,
       fit: BoxFit.cover,
-
       errorBuilder: (context, error, stackTrace) {
-        return _imagenPredeterminada();
+        return _predeterminada();
       },
-    );
-  }
-
-  // =============================================================
-  // IMAGEN PREDETERMINADA
-  // =============================================================
-
-  Widget _imagenPredeterminada() {
-    return Container(
-      width: double.infinity,
-      height: 135,
-
-      color: AppColors.tarjetaClara,
-
-      child: const Center(
-        child: Icon(Icons.cake_outlined, color: AppColors.naranja, size: 45),
-      ),
     );
   }
 }
