@@ -1,7 +1,5 @@
 import 'dart:io';
-
 import 'package:flutter/material.dart';
-
 import '../../estilos/styles.dart';
 import '../../../logica/pedidos_service.dart';
 import '../../../modelos/pedido.dart';
@@ -10,7 +8,6 @@ import '../../../logica/carrito_provider.dart';
 
 class Carrito extends StatefulWidget {
   const Carrito({super.key});
-
   @override
   State<Carrito> createState() => _CarritoState();
 }
@@ -18,15 +15,12 @@ class Carrito extends StatefulWidget {
 class _CarritoState extends State<Carrito> {
   final PedidosService pedidosService = PedidosService();
   final CarritoProvider carrito = CarritoProvider.instance;
-
   bool realizandoPedido = false;
   bool consultandoIntento = true;
   bool hayIntentoPendiente = false;
-
   double get subtotal => carrito.subtotal;
   double get envio => carrito.envio;
   double get total => carrito.total;
-
   @override
   void initState() {
     super.initState();
@@ -35,7 +29,6 @@ class _CarritoState extends State<Carrito> {
 
   void _mostrarMensaje(String mensaje) {
     if (!mounted) return;
-
     ScaffoldMessenger.of(context)
       ..hideCurrentSnackBar()
       ..showSnackBar(SnackBar(content: Text(mensaje)));
@@ -43,16 +36,13 @@ class _CarritoState extends State<Carrito> {
 
   Future<void> _consultarIntento() async {
     final usuario = Sesion.usuarioActual;
-
     try {
       final pendiente = await pedidosService.tieneIntentoPendiente().timeout(
         const Duration(seconds: 5),
       );
-
       if (!mounted || !identical(Sesion.usuarioActual, usuario)) {
         return;
       }
-
       setState(() {
         hayIntentoPendiente = pendiente;
       });
@@ -60,7 +50,6 @@ class _CarritoState extends State<Carrito> {
       if (!mounted || !identical(Sesion.usuarioActual, usuario)) {
         return;
       }
-
       _mostrarMensaje(
         'No se pudo consultar el intento anterior. '
         'Lo comprobaremos antes de enviar un pedido.',
@@ -76,6 +65,12 @@ class _CarritoState extends State<Carrito> {
 
   void aumentarCantidad(int index) {
     if (realizandoPedido) return;
+    if (index < 0 || index >= carrito.productos.length) return;
+    if (carrito.productos[index].cantidad >=
+        CarritoProvider.maximoPorProducto) {
+      _mostrarMensaje(CarritoProvider.mensajeLimite);
+      return;
+    }
     carrito.aumentar(index);
   }
 
@@ -92,38 +87,29 @@ class _CarritoState extends State<Carrito> {
   // ============================================================
   // REALIZAR O VERIFICAR EL PEDIDO
   // ============================================================
-
   Future<void> realizarPedido() async {
     if (realizandoPedido || consultandoIntento) return;
-
     final usuario = Sesion.usuarioActual;
-
     if (usuario == null || usuario.id == null) {
       _mostrarMensaje('Inicia sesión para realizar tu pedido.');
       return;
     }
-
     final estabaPendiente = hayIntentoPendiente;
-
     setState(() {
       realizandoPedido = true;
     });
-
     try {
       // Se comprueba otra vez para contemplar operaciones que
       // terminaron después de mostrar un mensaje de espera.
       final pendiente = await pedidosService.tieneIntentoPendiente().timeout(
         const Duration(seconds: 5),
       );
-
       if (!mounted || !identical(Sesion.usuarioActual, usuario)) {
         return;
       }
-
       setState(() {
         hayIntentoPendiente = pendiente;
       });
-
       if (pendiente) {
         await pedidosService.retomarPedidoPendiente();
       } else {
@@ -134,12 +120,10 @@ class _CarritoState extends State<Carrito> {
           );
           return;
         }
-
         if (carrito.productos.isEmpty) {
           _mostrarMensaje('No hay productos en el carrito.');
           return;
         }
-
         // Esperamos a que las cantidades del carrito se confirmen
         // antes de utilizarlas para crear un pedido nuevo.
         if (carrito.sincronizando) {
@@ -149,16 +133,20 @@ class _CarritoState extends State<Carrito> {
           );
           return;
         }
-
         if (carrito.mensajeError != null) {
           _mostrarMensaje(carrito.mensajeError!);
           return;
         }
-
+        if (carrito.superaLimite) {
+          _mostrarMensaje(
+            'El máximo es de 15 unidades por producto. '
+            'Reduce las cantidades que superen ese límite antes de continuar.',
+          );
+          return;
+        }
         final productosPedido = carrito.productos
             .map((producto) => '${producto.nombre} x${producto.cantidad}')
             .join(', ');
-
         final pedido = Pedido(
           usuarioId: usuario.id!,
           productos: productosPedido,
@@ -167,42 +155,33 @@ class _CarritoState extends State<Carrito> {
           fecha: DateTime.now().toString(),
           clienteNombre: usuario.nombre,
         );
-
         await pedidosService.insertarPedido(pedido);
       }
-
       if (!mounted || !identical(Sesion.usuarioActual, usuario)) {
         return;
       }
-
       // El servicio ya retiró en Firebase las cantidades enviadas.
       // El listener del carrito recibe ese cambio.
       setState(() {
         hayIntentoPendiente = false;
       });
-
       _mostrarMensaje('Pedido realizado correctamente.');
     } on PedidoException catch (error) {
       if (!mounted || !identical(Sesion.usuarioActual, usuario)) {
         return;
       }
-
       setState(() {
         hayIntentoPendiente = true;
       });
-
       _mostrarMensaje(error.mensaje);
     } catch (error) {
       debugPrint('ERROR AL REALIZAR PEDIDO: $error');
-
       if (!mounted || !identical(Sesion.usuarioActual, usuario)) {
         return;
       }
-
       setState(() {
         hayIntentoPendiente = true;
       });
-
       _mostrarMensaje(
         'No pudimos completar la verificación. '
         'Comprueba tu conexión y pulsa VERIFICAR PEDIDO.',
@@ -219,7 +198,6 @@ class _CarritoState extends State<Carrito> {
   // ============================================================
   // BUILD
   // ============================================================
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -239,7 +217,6 @@ class _CarritoState extends State<Carrito> {
           if (carrito.productos.isEmpty) {
             return _carritoVacio();
           }
-
           return SingleChildScrollView(
             padding: const EdgeInsets.fromLTRB(18, 10, 18, 30),
             child: Column(
@@ -251,11 +228,15 @@ class _CarritoState extends State<Carrito> {
                   'Revisa tus productos antes de continuar.',
                   style: AppStyles.textoNormal,
                 ),
+                const SizedBox(height: 8),
+                const Text(
+                  'Máximo 15 unidades del mismo producto por pedido.',
+                  style: AppStyles.textoNormal,
+                ),
                 const SizedBox(height: 25),
                 ...carrito.productos.asMap().entries.map((entry) {
                   final index = entry.key;
                   final producto = entry.value;
-
                   return Padding(
                     padding: const EdgeInsets.only(bottom: 14),
                     child: IgnorePointer(
@@ -294,10 +275,8 @@ class _CarritoState extends State<Carrito> {
   // ============================================================
   // BOTÓN HACER O VERIFICAR PEDIDO
   // ============================================================
-
   Widget _botonPedido() {
     final ocupado = realizandoPedido || consultandoIntento;
-
     return SizedBox(
       width: double.infinity,
       height: 55,
@@ -334,7 +313,6 @@ class _CarritoState extends State<Carrito> {
   // ============================================================
   // CARRITO VACÍO
   // ============================================================
-
   Widget _carritoVacio() {
     return Center(
       child: SingleChildScrollView(
@@ -381,7 +359,6 @@ class _CarritoState extends State<Carrito> {
   // ============================================================
   // RESUMEN
   // ============================================================
-
   Widget _resumenPedido() {
     return Container(
       padding: const EdgeInsets.all(18),
@@ -444,7 +421,6 @@ class _CarritoState extends State<Carrito> {
   // ============================================================
   // PRODUCTO
   // ============================================================
-
   Widget _productoCarrito({
     required CarritoItem producto,
     required VoidCallback disminuir,
@@ -542,14 +518,11 @@ class _CarritoState extends State<Carrito> {
   // ============================================================
   // IMÁGENES
   // ============================================================
-
   Widget _imagenProducto(CarritoItem producto) {
     final imagen = producto.imagen.trim();
-
     if (imagen.isEmpty) {
       return _imagenPredeterminada();
     }
-
     if (imagen.startsWith('http://') || imagen.startsWith('https://')) {
       return Image.network(
         imagen,
@@ -561,9 +534,7 @@ class _CarritoState extends State<Carrito> {
         },
       );
     }
-
     final archivo = File(imagen);
-
     if (archivo.existsSync()) {
       return Image.file(
         archivo,
@@ -575,7 +546,6 @@ class _CarritoState extends State<Carrito> {
         },
       );
     }
-
     return Image.asset(
       imagen,
       width: 75,
