@@ -22,13 +22,14 @@ class _LoginState extends State<Login> {
   bool ocultarPassword = true;
   bool cargando = false;
   bool cargandoGoogle = false;
+  bool enviandoRecuperacion = false;
   bool validarCampos = false;
   bool credencialesIncorrectas = false;
 
   String? errorCorreo;
   String? errorPassword;
 
-  bool get ocupado => cargando || cargandoGoogle;
+  bool get ocupado => cargando || cargandoGoogle || enviandoRecuperacion;
 
   @override
   void dispose() {
@@ -110,6 +111,78 @@ class _LoginState extends State<Login> {
           ),
         ),
       );
+  }
+
+  Future<void> recuperarContrasena() async {
+    if (ocupado) return;
+
+    final error = _validarCorreo();
+
+    setState(() {
+      errorCorreo = error;
+    });
+
+    if (error != null) return;
+
+    final correo = correoController.text.trim();
+
+    FocusScope.of(context).unfocus();
+
+    setState(() {
+      enviandoRecuperacion = true;
+    });
+
+    try {
+      await autenticacion.recuperarContrasena(correo);
+
+      if (!mounted) return;
+
+      _mostrarMensaje(
+        'Si existe una cuenta asociada a ese correo, recibirás un enlace '
+        'para restablecer tu contraseña. Revisa también Spam.',
+      );
+    } on AutenticacionException catch (e) {
+      if (!mounted) return;
+
+      switch (e.code) {
+        case 'invalid-email':
+          setState(() {
+            errorCorreo = 'Ingresa un correo electrónico válido';
+          });
+          break;
+
+        case 'network-request-failed':
+          _mostrarMensaje(
+            'No se pudo conectar. Revisa tu conexión a Internet.',
+          );
+          break;
+
+        case 'too-many-requests':
+          _mostrarMensaje(
+            'Demasiados intentos. Espera unos minutos antes de volver a enviar.',
+          );
+          break;
+
+        default:
+          _mostrarMensaje(
+            'No se pudo solicitar la recuperación. Intenta nuevamente.',
+          );
+      }
+    } catch (e) {
+      if (!mounted) return;
+
+      debugPrint('ERROR RECUPERACIÓN: $e');
+
+      _mostrarMensaje(
+        'No se pudo solicitar la recuperación. Intenta nuevamente.',
+      );
+    } finally {
+      if (mounted) {
+        setState(() {
+          enviandoRecuperacion = false;
+        });
+      }
+    }
   }
 
   // LOGIN CON CORREO
@@ -452,6 +525,23 @@ class _LoginState extends State<Login> {
                           ),
                         ),
                       ),
+
+                      Align(
+                        alignment: Alignment.centerRight,
+                        child: TextButton(
+                          onPressed: ocupado ? null : recuperarContrasena,
+                          child: Text(
+                            enviandoRecuperacion
+                                ? 'Enviando solicitud...'
+                                : '¿Olvidaste tu contraseña?',
+                            style: const TextStyle(
+                              color: AppColors.naranja,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                      ),
+
                       const SizedBox(height: 22),
 
                       // INICIAR SESIÓN

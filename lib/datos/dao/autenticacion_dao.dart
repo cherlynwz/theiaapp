@@ -9,7 +9,9 @@ class AutenticacionDAO {
 
   Future<Usuario> iniciarConCorreo(String correo, String password) async {
     final resultado = await _auth.signInWithEmailAndPassword(
-      email: correo, password: password);
+      email: correo,
+      password: password,
+    );
     final usuario = resultado.user;
     if (usuario == null) throw Exception('No se pudo obtener el usuario');
     final referencia = _db.collection('usuarios').doc(usuario.uid);
@@ -25,7 +27,8 @@ class AutenticacionDAO {
     final cuenta = await GoogleService.iniciarSesion();
     if (cuenta == null) return null;
     final credencial = GoogleAuthProvider.credential(
-      idToken: cuenta.authentication.idToken);
+      idToken: cuenta.authentication.idToken,
+    );
     final resultado = await _auth.signInWithCredential(credencial);
     final usuario = resultado.user;
     if (usuario == null) {
@@ -45,18 +48,23 @@ class AutenticacionDAO {
     return _leerPerfil(usuario, referencia, actual.data()!, esGoogle: true);
   }
 
-  Future<Usuario> _leerPerfil(User usuario,
-      DocumentReference<Map<String, dynamic>> referencia,
-      Map<String, dynamic> datos, {bool esGoogle = false}) async {
+  Future<Usuario> _leerPerfil(
+    User usuario,
+    DocumentReference<Map<String, dynamic>> referencia,
+    Map<String, dynamic> datos, {
+    bool esGoogle = false,
+  }) async {
     final valor = datos['id'];
     final int id = valor is num
-        ? valor.toInt() : DateTime.now().millisecondsSinceEpoch;
+        ? valor.toInt()
+        : DateTime.now().millisecondsSinceEpoch;
     if (valor is! num) {
       await referencia.set({'id': id}, SetOptions(merge: true));
     }
     return Usuario(
       id: id,
-      nombre: datos['nombre'] ??
+      nombre:
+          datos['nombre'] ??
           (esGoogle ? usuario.displayName ?? 'Usuario Google' : ''),
       correo: datos['correo'] ?? usuario.email ?? '',
       password: '',
@@ -65,15 +73,28 @@ class AutenticacionDAO {
     );
   }
 
-  Future<void> registrar({required String nombre, required String correo,
-      required String password, required String telefono}) async {
+  Future<void> registrar({
+    required String nombre,
+    required String correo,
+    required String password,
+    required String telefono,
+  }) async {
     final resultado = await _auth.createUserWithEmailAndPassword(
-      email: correo, password: password);
+      email: correo,
+      password: password,
+    );
     final uid = resultado.user!.uid;
     await _db.collection('usuarios').doc(uid).set({
       'id': DateTime.now().millisecondsSinceEpoch,
-      'nombre': nombre, 'correo': correo,
-      'telefono': telefono, 'rol': 'cliente',
+      'nombre': nombre,
+      'correo': correo,
+      'telefono': telefono,
+      'rol': 'cliente',
     });
+  }
+
+  // ENVIAR CORREO PARA RESTABLECER LA CONTRASEÑA
+  Future<void> recuperarContrasena(String correo) async {
+    await _auth.sendPasswordResetEmail(email: correo.trim());
   }
 }
