@@ -82,14 +82,42 @@ class _AgregarProductoState extends State<AgregarProducto> {
       return;
     }
 
-    final precio = double.tryParse(precioTexto.replaceAll(',', '.'));
+    final errorPrecio = ProductosService.validarPrecioTexto(precioTexto);
 
-    if (precio == null || precio <= 0) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('Ingresa un precio válido')));
+    if (errorPrecio != null) {
+      ScaffoldMessenger.of(context)
+        ..clearSnackBars()
+        ..showSnackBar(
+          SnackBar(
+            backgroundColor: AppColors.tarjetaClara,
+            behavior: SnackBarBehavior.floating,
+            margin: const EdgeInsets.fromLTRB(18, 0, 18, 15),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(14),
+            ),
+            duration: const Duration(seconds: 2),
+            content: Row(
+              children: [
+                const Icon(Icons.info_outline, color: AppColors.naranja),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Text(
+                    errorPrecio,
+                    style: const TextStyle(
+                      color: AppColors.crema,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+
       return;
     }
+
+    final precio = double.parse(precioTexto.replaceAll(',', '.'));
 
     if (imagenTemporal == null) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -382,11 +410,55 @@ class _AgregarProductoState extends State<AgregarProducto> {
             // =====================================================
             // PRECIO
             // =====================================================
-            _campo(
+            TextFormField(
               controller: precioController,
-              texto: 'Precio',
-              icono: Icons.attach_money,
-              tipoTeclado: const TextInputType.numberWithOptions(decimal: true),
+              keyboardType: const TextInputType.numberWithOptions(
+                decimal: true,
+              ),
+              autovalidateMode: AutovalidateMode.onUserInteraction,
+              validator: (valor) {
+                return ProductosService.validarPrecioTexto(valor ?? '');
+              },
+              maxLength: 7,
+              style: const TextStyle(color: AppColors.crema),
+              decoration: InputDecoration(
+                labelText: 'Precio',
+                helperText: 'De \$0.01 a \$2,000.00 MXN. Máximo 2 decimales.',
+                helperMaxLines: 2,
+                counterText: '',
+                labelStyle: const TextStyle(color: AppColors.textoSecundario),
+                helperStyle: const TextStyle(color: AppColors.textoSecundario),
+                prefixIcon: const Icon(
+                  Icons.attach_money,
+                  color: AppColors.naranja,
+                ),
+                filled: true,
+                fillColor: AppColors.tarjeta,
+                errorMaxLines: 3,
+                errorStyle: const TextStyle(color: Colors.redAccent),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(15),
+                  borderSide: const BorderSide(color: AppColors.borde),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(15),
+                  borderSide: const BorderSide(
+                    color: AppColors.naranja,
+                    width: 1.5,
+                  ),
+                ),
+                errorBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(15),
+                  borderSide: const BorderSide(color: Colors.redAccent),
+                ),
+                focusedErrorBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(15),
+                  borderSide: const BorderSide(
+                    color: Colors.redAccent,
+                    width: 1.5,
+                  ),
+                ),
+              ),
             ),
 
             const SizedBox(height: 22),
