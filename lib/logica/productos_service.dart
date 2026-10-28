@@ -1,16 +1,65 @@
 import '../datos/dao/productos_dao.dart';
 import '../modelos/producto.dart';
 
+class ProductoDuplicadoException implements Exception {
+  @override
+  String toString() {
+    return 'Ya existe otro producto con ese nombre.';
+  }
+}
+
 class ProductosService {
   final ProductoDAO _dao = ProductoDAO();
 
-  Future<int> insertarProducto(Producto producto) => _dao.insertarProducto(producto);
+  String _normalizarNombre(String nombre) {
+    return nombre.trim().replaceAll(RegExp(r'\s+'), ' ').toLowerCase();
+  }
 
-  Future<List<Producto>> obtenerProductos() => _dao.obtenerProductos();
+  Future<void> _validarNombreDisponible(
+    Producto producto, {
+    bool editando = false,
+  }) async {
+    final nombre = _normalizarNombre(producto.nombre);
 
-  Future<int> eliminarProducto(int id) => _dao.eliminarProducto(id);
+    if (nombre.isEmpty) {
+      throw ArgumentError('Escribe el nombre del producto.');
+    }
 
-  Future<int> actualizarProducto(Producto producto) => _dao.actualizarProducto(producto);
+    final productos = await _dao.obtenerProductos();
 
-  Future<int> contarProductos() => _dao.contarProductos();
+    final duplicado = productos.any((existente) {
+      // Al editar, el producto puede conservar su propio nombre.
+      if (editando && producto.id != null && existente.id == producto.id) {
+        return false;
+      }
+
+      return _normalizarNombre(existente.nombre) == nombre;
+    });
+
+    if (duplicado) {
+      throw ProductoDuplicadoException();
+    }
+  }
+
+  Future<int> insertarProducto(Producto producto) async {
+    await _validarNombreDisponible(producto);
+    return _dao.insertarProducto(producto);
+  }
+
+  Future<List<Producto>> obtenerProductos() {
+    return _dao.obtenerProductos();
+  }
+
+  Future<int> eliminarProducto(int id) {
+    return _dao.eliminarProducto(id);
+  }
+
+  Future<int> actualizarProducto(Producto producto) async {
+    await _validarNombreDisponible(producto, editando: true);
+    return _dao.actualizarProducto(producto);
+  }
+
+  Future<int> contarProductos() {
+    return _dao.contarProductos();
+  }
 }

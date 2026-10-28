@@ -208,12 +208,38 @@ class _EditarProductoState extends State<EditarProducto> {
         guardando = false;
       });
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('No se pudieron guardar los cambios: $e'),
-          duration: const Duration(seconds: 8),
-        ),
-      );
+      final mensaje = e is ProductoDuplicadoException
+          ? 'Ya existe otro producto con ese nombre.'
+          : 'No se pudieron guardar los cambios. Intenta nuevamente.';
+
+      ScaffoldMessenger.of(context)
+        ..clearSnackBars()
+        ..showSnackBar(
+          SnackBar(
+            backgroundColor: AppColors.tarjetaClara,
+            behavior: SnackBarBehavior.floating,
+            margin: const EdgeInsets.fromLTRB(18, 0, 18, 15),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(14),
+            ),
+            duration: const Duration(seconds: 2),
+            content: Row(
+              children: [
+                const Icon(Icons.info_outline, color: AppColors.naranja),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Text(
+                    mensaje,
+                    style: const TextStyle(
+                      color: AppColors.crema,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
     }
   }
 
@@ -517,7 +543,9 @@ class _EditarProductoState extends State<EditarProducto> {
 
                   foregroundColor: Colors.black,
 
-                  disabledBackgroundColor: AppColors.naranja.withValues(alpha: 0.5),
+                  disabledBackgroundColor: AppColors.naranja.withValues(
+                    alpha: 0.5,
+                  ),
 
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(15),
