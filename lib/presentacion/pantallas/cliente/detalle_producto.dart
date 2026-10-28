@@ -170,28 +170,13 @@ class _DetalleProductoState extends State<DetalleProducto> {
             // ==================================================
             // PRECIO
             // ==================================================
-            Row(
-              children: [
-                Text(
-                  '\$${precio.toStringAsFixed(0)}',
-                  style: const TextStyle(
-                    color: AppColors.naranja,
-                    fontSize: 26,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                const Spacer(),
-                const Icon(Icons.star, color: AppColors.naranja, size: 20),
-                const Icon(Icons.star, color: AppColors.naranja, size: 20),
-                const Icon(Icons.star, color: AppColors.naranja, size: 20),
-                const Icon(Icons.star, color: AppColors.naranja, size: 20),
-                const Icon(Icons.star_half, color: AppColors.naranja, size: 20),
-                const SizedBox(width: 5),
-                const Text(
-                  '4.8',
-                  style: TextStyle(color: AppColors.textoSecundario),
-                ),
-              ],
+            Text(
+              '\$${precio.toStringAsFixed(0)}',
+              style: const TextStyle(
+                color: AppColors.naranja,
+                fontSize: 26,
+                fontWeight: FontWeight.bold,
+              ),
             ),
             const SizedBox(height: 24),
             // ==================================================
@@ -443,7 +428,6 @@ class _DetalleProductoState extends State<DetalleProducto> {
   void _agregarCarrito(Map<String, dynamic> datos) {
     // ============================================
     // AGREGAR AL CARRITO
-    // NO SE CAMBIA SU FUNCIONAMIENTO
     // ============================================
     final carrito = CarritoProvider.instance;
     if (carrito.cantidadEnCarrito(datos) + cantidad >
