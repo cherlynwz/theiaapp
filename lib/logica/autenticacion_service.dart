@@ -109,4 +109,22 @@ class AutenticacionService {
       throw AutenticacionException(e.code);
     }
   }
+
+  // RECUPERAR CONTRASEÑA
+  Future<void> recuperarContrasena(String correo) async {
+    final correoLimpio = correo.trim();
+
+    if (!RegExp(r'^[^\s@]+@[^\s@]+\.[^\s@]+$').hasMatch(correoLimpio)) {
+      throw AutenticacionException('invalid-email');
+    }
+
+    try {
+      await _dao.recuperarContrasena(correoLimpio);
+    } on FirebaseAuthException catch (e) {
+      // Mantiene una respuesta uniforme para correos no registrados.
+      if (e.code == 'user-not-found') return;
+
+      throw AutenticacionException(e.code);
+    }
+  }
 }
